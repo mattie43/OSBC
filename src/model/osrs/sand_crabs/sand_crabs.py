@@ -15,46 +15,30 @@ from utilities.geometry import RuneLiteObject
 class OSRSSandCrabs(OSRSBot, launcher.Launchable):
     def __init__(self):
         bot_title = "Sand Crabs"
-        description = "Combat script made for sand crabs in Crawclaw Caves."
+        description = "Combat script made for sand crabs in Crabclaw Caves."
         super().__init__(bot_title=bot_title, description=description)
         # Set option variables below (initial value is only used during headless testing)
         self.running_time = 1
         self.api_m = MorgHTTPSocket()
         # self.api_s = StatusSocket()
+        self.food_choice = ids.ANGLERFISH
 
     def create_options(self):
-        """
-        Use the OptionsBuilder to define the options for the bot. For each function call below,
-        we define the type of option we want to create, its key, a label for the option that the user will
-        see, and the possible values the user can select. The key is used in the save_options function to
-        unpack the dictionary of options after the user has selected them.
-        """
-        self.options_builder.add_slider_option("running_time", "How long to run (minutes)?", 1, 500)
-        self.options_builder.add_text_edit_option("text_edit_example", "Text Edit Example", "Placeholder text here")
-        self.options_builder.add_checkbox_option("multi_select_example", "Multi-select Example", ["A", "B", "C"])
-        self.options_builder.add_dropdown_option("menu_example", "Menu Example", ["A", "B", "C"])
+        # self.options_builder.add_slider_option("running_time", "How long to run (minutes)?", 1, 500)
+        # self.options_builder.add_text_edit_option("text_edit_example", "Text Edit Example", "Placeholder text here")
+        # self.options_builder.add_checkbox_option("multi_select_example", "Multi-select Example", ["A", "B", "C"])
+        self.options_builder.add_dropdown_option("food_choice", "Food choice", ["ANGLERFISH", "MANTA_RAY"])
 
     def save_options(self, options: dict):
-        """
-        For each option in the dictionary, if it is an expected option, save the value as a property of the bot.
-        If any unexpected options are found, log a warning. If an option is missing, set the options_set flag to
-        False.
-        """
         for option in options:
-            if option == "running_time":
-                self.running_time = options[option]
-            elif option == "text_edit_example":
-                self.log_msg(f"Text edit example: {options[option]}")
-            elif option == "multi_select_example":
-                self.log_msg(f"Multi-select example: {options[option]}")
-            elif option == "menu_example":
-                self.log_msg(f"Menu example: {options[option]}")
+            if option == "food_choice":
+                self.log_msg(f"Food choice: {options[option]}")
+                self.food_choice = getattr(ids, options[option])
             else:
                 self.log_msg(f"Unknown option: {option}")
                 print("Developer: ensure that the option keys are correct, and that options are being unpacked correctly.")
                 self.options_set = False
                 return
-        self.log_msg(f"Running time: {self.running_time} minutes.")
         self.log_msg("Options set successfully.")
         self.options_set = True
 
@@ -70,12 +54,9 @@ class OSRSSandCrabs(OSRSBot, launcher.Launchable):
         pass
 
     def main_loop(self):
-        # set food to use
-        food_id = ids.ANGLERFISH
-
         while True:
             # check hp
-            self._check_hp(food_id)
+            self._check_hp()
 
             # check xp (close to 99?)
             self._check_xp()
@@ -85,11 +66,11 @@ class OSRSSandCrabs(OSRSBot, launcher.Launchable):
 
         self.stop()
 
-    def _check_hp(self, food_id):
+    def _check_hp(self):
         self.log_msg("Checking hp..")
         currHP = self.api_m.get_hitpoints()[0]
         if currHP < 25:
-            food_location = self.api_m.get_first_occurrence(food_id)
+            food_location = self.api_m.get_first_occurrence(self.food_id)
             food_point = self.win.inventory_slots[food_location].random_point()
             self.mouse.move_to(food_point)
             self.mouse.click()
