@@ -341,11 +341,11 @@ class App(customtkinter.CTk):
 
 if __name__ == "__main__":
     # === Cold-start with OSBC GUI ===
-    # app = App()
-    # app.start()
+    app = App()
+    app.start()
 
     # === Hot-start with my_combat ===
-    from model.osrs.my_combat import OSRSMyCombat
+    # from model.osrs.my_combat import OSRSMyCombat
 
-    app = App(test=True)
-    app.test(OSRSMyCombat())
+    # app = App(test=True)
+    # app.test(OSRSMyCombat())

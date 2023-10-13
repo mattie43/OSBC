@@ -1,17 +1,21 @@
 import time
+import random
 
 import utilities.api.item_ids as ids
 import utilities.color as clr
 import utilities.random_util as rd
+import utilities.game_launcher as launcher
+import pathlib
 from model.osrs.osrs_bot import OSRSBot
 from utilities.api.morg_http_client import MorgHTTPSocket
 from utilities.api.status_socket import StatusSocket
+from utilities.geometry import RuneLiteObject
 
 
-class OSRSMyCombat(OSRSBot):
+class OSRSSandCrabs(OSRSBot, launcher.Launchable):
     def __init__(self):
-        bot_title = "My Combat"
-        description = "Combat script made by Mattie."
+        bot_title = "Sand Crabs"
+        description = "Combat script made for sand crabs in Crawclaw Caves."
         super().__init__(bot_title=bot_title, description=description)
         # Set option variables below (initial value is only used during headless testing)
         self.running_time = 1
@@ -54,6 +58,17 @@ class OSRSMyCombat(OSRSBot):
         self.log_msg("Options set successfully.")
         self.options_set = True
 
+    def launch_game(self):
+        settings = pathlib.Path(__file__).parent.joinpath("custom_settings.properties")
+        launcher.launch_runelite(
+            properties_path=settings,
+            game_title=self.game_title,
+            use_profile_manager=True,
+            profile_name="OSBCSandCrabs",
+            callback=self.log_msg,
+        )
+        pass
+
     def main_loop(self):
         # set food to use
         food_id = ids.ANGLERFISH
@@ -65,17 +80,8 @@ class OSRSMyCombat(OSRSBot):
             # check xp (close to 99?)
             self._check_xp()
 
-            # check in combat (animation?)
-            in_combat = self.api_m.get_is_in_combat()
-
-            # check for closest crab and atk
-            if in_combat:
-                self.log_msg("Already in combat..")
-            else:
-                self._attack_crab()
-
-            # wait 30-60sec?
-            time.sleep(rd.fancy_normal_sample(5, 10))
+            # check for combat reset
+            self._combat_check()
 
         self.stop()
 
@@ -92,17 +98,36 @@ class OSRSMyCombat(OSRSBot):
     def _check_xp(self):
         self.log_msg("Checking xp..")
         xp_99 = 13034431
-        xp_diff = xp_99 - 10000
+        xp_diff = xp_99 - 30000
         atk_xp = self.api_m.get_skill_xp("Attack")
         hp_xp = self.api_m.get_skill_xp("Hitpoints")
         if atk_xp > xp_diff or hp_xp > xp_diff:
             self.log_msg("Nearing max xp! Stopping script..")
             self.stop()
 
-    def _attack_crab(self):
-        nearest_crab = self.get_nearest_tagged_NPC()
-        if not nearest_crab:
-            return self.log_msg("Failed to find crab..")
-        self.mouse.move_to(nearest_crab.random_point())
+    def _combat_check(self, attempt=1):
+        if attempt > 3:
+            return self._reset_aggro()
+
+        time.sleep(8)
+        in_combat = self.api_m.get_is_in_combat()
+        if in_combat:
+            self.log_msg("In combat already..")
+        else:
+            self._combat_check(attempt=attempt + 1)
+
+    def _reset_aggro(self, step=1):
+        if step > 4:
+            return self.log_msg("Last step taken..")
+
+        step_dict = {1: clr.PINK, 2: clr.CYAN, 3: clr.PINK, 4: clr.GREEN}
+        sqs = self.get_all_tagged_in_rect(self.win.game_view, step_dict[step])
+
+        if not sqs:
+            self.log_msg(f"Failed to find step: {step}")
+            self.stop()
+
+        self.mouse.move_to(random.choice(sqs).random_point())
         self.mouse.click()
-        self.log_msg("Attacking crab..")
+        time.sleep(9)
+        self._reset_aggro(step=step + 1)
