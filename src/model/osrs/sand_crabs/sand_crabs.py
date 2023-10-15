@@ -22,6 +22,7 @@ class OSRSSandCrabs(OSRSBot, launcher.Launchable):
         self.api_m = MorgHTTPSocket()
         # self.api_s = StatusSocket()
         self.food_choice = ids.ANGLERFISH
+        self.camera_movement = 1
 
     def create_options(self):
         # self.options_builder.add_slider_option("running_time", "How long to run (minutes)?", 1, 500)
@@ -55,29 +56,25 @@ class OSRSSandCrabs(OSRSBot, launcher.Launchable):
 
     def main_loop(self):
         while True:
-            # check hp
-            self._check_hp()
+            in_combat = self._combat_check()
 
-            # check xp (close to 99?)
-            self._check_xp()
-
-            # check for combat reset
-            self._combat_check()
+            if not in_combat:
+                self._check_hp()
+                self._check_xp()
+                self._reset_aggro()
 
         self.stop()
 
     def _check_hp(self):
-        self.log_msg("Checking hp..")
         currHP = self.api_m.get_hitpoints()[0]
         if currHP < 25:
             food_location = self.api_m.get_first_occurrence(self.food_id)
             food_point = self.win.inventory_slots[food_location].random_point()
             self.mouse.move_to(food_point)
             self.mouse.click()
-            self.log_msg("Ate food")
+            self.log_msg("Food eaten..")
 
     def _check_xp(self):
-        self.log_msg("Checking xp..")
         xp_99 = 13034431
         xp_diff = xp_99 - 30000
         atk_xp = self.api_m.get_skill_xp("Attack")
@@ -88,27 +85,47 @@ class OSRSSandCrabs(OSRSBot, launcher.Launchable):
 
     def _combat_check(self, attempt=1):
         if attempt > 3:
-            return self._reset_aggro()
+            return False
 
         time.sleep(8)
         in_combat = self.api_m.get_is_in_combat()
-        if in_combat:
-            self.log_msg("In combat already..")
-        else:
-            self._combat_check(attempt=attempt + 1)
+        if not in_combat:
+            return self._combat_check(attempt=attempt + 1)
 
-    def _reset_aggro(self, step=1):
-        if step > 4:
-            return self.log_msg("Last step taken..")
+        return True
 
+    def _reset_aggro(self):
+        for x in range(4):
+            sqs = self._find_sqs(x + 1)
+            self._walk_to(sqs)
+        self.log_msg("Aggro reset..")
+
+    def _find_sqs(self, step_num):
         step_dict = {1: clr.PINK, 2: clr.CYAN, 3: clr.PINK, 4: clr.GREEN}
-        sqs = self.get_all_tagged_in_rect(self.win.game_view, step_dict[step])
 
-        if not sqs:
-            self.log_msg(f"Failed to find step: {step}")
-            self.stop()
+        for x in range(3):
+            sqs = self.get_all_tagged_in_rect(self.win.game_view, step_dict[step_num])
+            if sqs:
+                return sqs
+            else:
+                self.move_camera(horizontal=self.camera_movement)
+                self.camera_movement = self.camera_movement * -1
+                time.sleep(0.5)
 
-        self.mouse.move_to(random.choice(sqs).random_point())
+        self.log_msg(f"Failed to find step: {step_num}")
+        self.stop()
+
+    def _walk_to(self, sqs):
+        sq_point = random.choice(sqs).random_point()
+        self.mouse.move_to(sq_point)
         self.mouse.click()
-        time.sleep(9)
-        self._reset_aggro(step=step + 1)
+        time.sleep(0.6)
+
+        prev_player_idle = None
+
+        while True:
+            player_idle = self.api_m.get_is_player_idle()
+            if player_idle and prev_player_idle:
+                break
+            prev_player_idle = player_idle
+            time.sleep(0.7)
