@@ -345,7 +345,7 @@ if __name__ == "__main__":
     # app.start()
 
     # === Hot-start ===
-    from model.osrs.sand_crabs.sand_crabs import OSRSSandCrabs
+    from model.osrs.agility.agility import OSRSAgility
 
     app = App(test=True)
-    app.test(OSRSSandCrabs())
+    app.test(OSRSAgility())

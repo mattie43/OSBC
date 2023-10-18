@@ -198,6 +198,25 @@ class MorgHTTPSocket:
             time.sleep(0.2)
         return -1
 
+    def wait_til_gained_xp_or_damage(self, skill: str, timeout: int = 10) -> int:
+        starting_xp = self.get_skill_xp(skill)
+        starting_hp = self.get_hitpoints()[0]
+        if starting_xp == -1 or starting_hp == -1:
+            print("Failed to get starting xp or hp.")
+            return -1
+
+        stop_time = time.time() + timeout
+        while time.time() < stop_time:
+            data = self.__do_get(endpoint=self.stats_endpoint)
+            final_xp = next(int(i["xp"]) for i in data[1:] if i["stat"] == skill)
+            if final_xp > starting_xp:
+                return final_xp
+            final_hp = self.get_hitpoints()[0]
+            if final_hp < starting_hp:
+                return -2
+            time.sleep(0.2)
+        return -1
+
     def get_game_tick(self) -> int:
         """
         Fetches game tick number.
