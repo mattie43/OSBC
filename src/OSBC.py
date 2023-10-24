@@ -341,11 +341,13 @@ class App(customtkinter.CTk):
 
 if __name__ == "__main__":
     # === Cold-start with OSBC GUI ===
-    # app = App()
-    # app.start()
+    cold_start = False
 
-    # === Hot-start ===
-    from model.osrs.agility.agility import OSRSAgility
+    if cold_start:
+        app = App()
+        app.start()
+    else:
+        from model.osrs.agility.agility import OSRSAgility
 
-    app = App(test=True)
-    app.test(OSRSAgility())
+        app = App(test=True)
+        app.test(OSRSAgility())

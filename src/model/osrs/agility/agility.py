@@ -36,14 +36,14 @@ class OSRSAgility(OSRSBot):
                 "coord": (2729, 3491, 3),
                 "text": "Climb-up",
                 "timeout": 10,
-                "wait": 1,
+                "wait": 0.5,
             },
             {
                 "color": clr.CYAN,
                 "coord": (2713, 3494, 2),
                 "text": "Jump",
                 "timeout": 10,
-                "wait": 1,
+                "wait": 0.1,
                 "failed_coord": (2715, 3494, 0),
             },
             {
@@ -55,42 +55,42 @@ class OSRSAgility(OSRSBot):
                 "failed_coord": (2710, 3484, 0),
             },
             {
-                "color": clr.GREEN,
+                "color": clr.ORANGE,
                 "coord": (2710, 3472, 3),
                 "text": "Jump",
                 "timeout": 10,
-                "wait": 2,
-            },
-            {
-                "color": clr.RED,
-                "coord": (2702, 3465, 2),
-                "text": "Jump",
-                "timeout": 10,
-                "wait": 1,
+                "wait": 0.5,
             },
             {
                 "color": clr.YELLOW,
+                "coord": (2702, 3465, 2),
+                "text": "Jump",
+                "timeout": 10,
+                "wait": 0.1,
+            },
+            {
+                "color": clr.RED,
                 "coord": (2704, 3464, 0),
                 "text": "Jump",
                 "timeout": 20,
-                "wait": 1,
+                "wait": 0.1,
             },
         ]
 
     def main_loop(self):
         # get course from options
         course = self.seers_course()
+        self._attempts = 1
 
         while True:
             for index, step in enumerate(course):
                 if self._click_color(step["color"]):
-                    # add fail check
                     if not self._wait_for_xp_or_fail():
                         break
-                    self._wait_time(step["wait"])
+                    time.sleep(step["wait"])
+                    self._mog_check()
 
                 if index == len(course) - 1:
-                    self.log_msg("Last step finished, running back..")
                     self._run_back()
 
         self.log_msg("Finished.")
@@ -106,21 +106,22 @@ class OSRSAgility(OSRSBot):
 
     def _wait_for_xp_or_fail(self):
         xp_dmg = self.api_m.wait_til_gained_xp_or_damage(skill="Agility")
+        # took dmg
         if xp_dmg == -2:
-            time.sleep(1)
-            self._reset_course()
+            time.sleep(0.5)
             return False
         return True
-
-    def _wait_time(self, wait):
-        time.sleep(wait)
 
     def _run_back(self):
         sqs = self.get_all_tagged_in_rect(self.win.game_view, clr.GREEN)
         if not sqs:
-            self.log_msg("Couldn't find run back, stopping script.. ")
-            self.stop()
-        # sqs = sorted(sqs, key=RuneLiteObject.distance_from_rect_center)
+            if self._attempts > 3:
+                self.log_msg("Couldn't find run back, stopping script.. ")
+                self.stop()
+            self._attempts = self._attempts + 1
+            return
+
+        self._attempts = 1
         sq_point = random.choice(sqs).random_point()
         self.mouse.move_to(sq_point)
         self.mouse.click()
@@ -136,16 +137,21 @@ class OSRSAgility(OSRSBot):
             prev_player_idle = player_idle
             time.sleep(0.6)
 
-    def _check_position(self, coord):
-        player_pos = self.api_m.get_player_position()
-        return player_pos == coord
+    def _mog_check(self):
+        item_text = ocr.find_text(["Mark of grace"], self.win.game_view, ocr.PLAIN_11, clr.PURPLE)
+        if item_text and item_text[0]:
+            item = item_text[0]
+            item.set_rectangle_reference(self.win.game_view)
+            if item.distance_from_center() < 100:
+                self.pick_up_loot("Mark of grace")
+                time.sleep(4)
 
-    def _reset_course(self):
-        sq = self.get_nearest_tag(clr.YELLOW)
-        if sq:
-            self.mouse.move_to(sq.random_point())
-            self.mouse.click()
-            self._check_idle()
+    def _point_variance(self, x: int, y: int, variance: int = 3):
+        if not x and not y:
+            return None
+        x += random.randint(-variance, variance)
+        y += random.randint(-variance, variance)
+        return Point(x, y)
 
     # # # # # #
     def do_step(self):

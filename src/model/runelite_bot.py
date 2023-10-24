@@ -113,7 +113,7 @@ class RuneLiteBot(Bot, metaclass=ABCMeta):
         """
         return ocr.find_text(action, self.win.current_action, ocr.PLAIN_12, clr.GREEN)
 
-    def pick_up_loot(self, items: Union[str, List[str]], supress_warning=True) -> bool:
+    def pick_up_loot(self, items: Union[str, List[str]], supress_warning=True, right_click=False) -> bool:
         """
         Attempts to pick up a single purple loot item off the ground. It is your responsibility to ensure you have
         enough inventory space to pick up the item. The item closest to the game view center is picked up first.
@@ -139,20 +139,23 @@ class RuneLiteBot(Bot, metaclass=ABCMeta):
                 if self.mouseover_text(contains=["Take"] + items, color=[clr.OFF_WHITE, clr.OFF_ORANGE]):
                     break
                 self.mouse.move_rel(0, 3, 1, mouseSpeed="fastest")
-            self.mouse.right_click()
-            # search the right-click menu
-            if take_text := ocr.find_text(
-                items,
-                self.win.game_view,
-                ocr.BOLD_12,
-                [clr.WHITE, clr.PURPLE, clr.ORANGE],
-            ):
-                self.mouse.move_to(take_text[0].random_point(), mouseSpeed="medium")
+            if not right_click:
                 self.mouse.click()
-                return True
             else:
-                self.log_msg(f"Could not find 'Take {items}' in right-click menu.")
-                return False
+                self.mouse.right_click()
+                # search the right-click menu
+                if take_text := ocr.find_text(
+                    items,
+                    self.win.game_view,
+                    ocr.BOLD_12,
+                    [clr.WHITE, clr.PURPLE, clr.ORANGE],
+                ):
+                    self.mouse.move_to(take_text[0].random_point(), mouseSpeed="medium")
+                    self.mouse.click()
+                    return True
+                else:
+                    self.log_msg(f"Could not find 'Take {items}' in right-click menu.")
+                    return False
         elif not supress_warning:
             self.log_msg(f"Could not find {items} on the ground.")
             return False
