@@ -44,12 +44,12 @@ class OSRSSandCrabs(OSRSBot, launcher.Launchable):
         self.options_set = True
 
     def launch_game(self):
-        settings = pathlib.Path(__file__).parent.joinpath("custom_settings.properties")
+        settings = pathlib.Path(__file__).parent.parent.joinpath("custom_settings.properties")
         launcher.launch_runelite(
             properties_path=settings,
             game_title=self.game_title,
             use_profile_manager=True,
-            profile_name="OSBCSandCrabs",
+            profile_name="mattie-profile",
             callback=self.log_msg,
         )
         pass

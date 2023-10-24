@@ -341,7 +341,7 @@ class App(customtkinter.CTk):
 
 if __name__ == "__main__":
     # === Cold-start with OSBC GUI ===
-    cold_start = False
+    cold_start = True
 
     if cold_start:
         app = App()

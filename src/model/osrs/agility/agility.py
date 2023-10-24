@@ -11,7 +11,7 @@ import utilities.color as clr
 import utilities.ocr as ocr
 
 
-class OSRSAgility(OSRSBot):
+class OSRSAgility(OSRSBot, launcher.Launchable):
     def __init__(self):
         bot_title = "AgilityRooftops"
         description = "Agility Rooftop Courses"
@@ -28,6 +28,17 @@ class OSRSAgility(OSRSBot):
         self.log_msg(f"Running time: {self.running_time} minutes.")
         self.log_msg("Options set successfully.")
         self.options_set = True
+
+    def launch_game(self):
+        settings = pathlib.Path(__file__).parent.parent.joinpath("custom_settings.properties")
+        launcher.launch_runelite(
+            properties_path=settings,
+            game_title=self.game_title,
+            use_profile_manager=True,
+            profile_name="mattie-profile",
+            callback=self.log_msg,
+        )
+        pass
 
     def seers_course(self):
         return [
