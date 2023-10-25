@@ -49,7 +49,7 @@ class OSRSSandCrabs(OSRSBot, launcher.Launchable):
             properties_path=settings,
             game_title=self.game_title,
             use_profile_manager=True,
-            profile_name="mattie-profile",
+            profile_name="osbc-profile",
             callback=self.log_msg,
         )
         pass

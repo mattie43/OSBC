@@ -9,11 +9,13 @@ from utilities.api.morg_http_client import MorgHTTPSocket
 from utilities.api.status_socket import StatusSocket
 import utilities.color as clr
 import utilities.ocr as ocr
+import utilities.game_launcher as launcher
+import pathlib
 
 
 class OSRSAgility(OSRSBot, launcher.Launchable):
     def __init__(self):
-        bot_title = "AgilityRooftops"
+        bot_title = "Rooftops"
         description = "Agility Rooftop Courses"
         super().__init__(bot_title=bot_title, description=description)
         self.running_time = 200
@@ -35,7 +37,7 @@ class OSRSAgility(OSRSBot, launcher.Launchable):
             properties_path=settings,
             game_title=self.game_title,
             use_profile_manager=True,
-            profile_name="mattie-profile",
+            profile_name="osbc-profile",
             callback=self.log_msg,
         )
         pass
