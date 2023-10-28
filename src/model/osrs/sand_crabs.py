@@ -17,17 +17,13 @@ class OSRSSandCrabs(OSRSBot, launcher.Launchable):
         bot_title = "Sand Crabs"
         description = "Combat script made for sand crabs in Crabclaw Caves."
         super().__init__(bot_title=bot_title, description=description)
-        # Set option variables below (initial value is only used during headless testing)
         self.running_time = 1
         self.api_m = MorgHTTPSocket()
-        # self.api_s = StatusSocket()
+        self.api_s = StatusSocket()
         self.food_choice = ids.ANGLERFISH
         self.camera_movement = 1
 
     def create_options(self):
-        # self.options_builder.add_slider_option("running_time", "How long to run (minutes)?", 1, 500)
-        # self.options_builder.add_text_edit_option("text_edit_example", "Text Edit Example", "Placeholder text here")
-        # self.options_builder.add_checkbox_option("multi_select_example", "Multi-select Example", ["A", "B", "C"])
         self.options_builder.add_dropdown_option("food_choice", "Food choice", ["ANGLERFISH", "MANTA_RAY"])
 
     def save_options(self, options: dict):
@@ -44,7 +40,7 @@ class OSRSSandCrabs(OSRSBot, launcher.Launchable):
         self.options_set = True
 
     def launch_game(self):
-        settings = pathlib.Path(__file__).parent.parent.joinpath("custom_settings.properties")
+        settings = pathlib.Path(__file__).parent.joinpath("custom_settings.properties")
         launcher.launch_runelite(
             properties_path=settings,
             game_title=self.game_title,
@@ -78,8 +74,7 @@ class OSRSSandCrabs(OSRSBot, launcher.Launchable):
         xp_99 = 13034431
         xp_diff = xp_99 - 30000
         atk_xp = self.api_m.get_skill_xp("Attack")
-        hp_xp = self.api_m.get_skill_xp("Hitpoints")
-        if atk_xp > xp_diff or hp_xp > xp_diff:
+        if atk_xp > xp_diff:
             self.log_msg("Nearing max xp! Stopping script..")
             self.stop()
 

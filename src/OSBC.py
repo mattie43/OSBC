@@ -347,7 +347,7 @@ if __name__ == "__main__":
         app = App()
         app.start()
     else:
-        from model.osrs.agility.agility import OSRSAgility
+        from model.osrs.agility import OSRSAgility
 
         app = App(test=True)
         app.test(OSRSAgility())
