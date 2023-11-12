@@ -240,6 +240,68 @@ class RuneLiteBot(Bot, metaclass=ABCMeta):
         else:
             return None
 
+    # Can we pick up MOGs better?
+    def img_masking(self):
+        image = self.win.game_view.screenshot()
+        # clr.PURPLE
+        # RGB
+        # [170, 0, 255]
+        # BGR
+        # [255, 0, 170]
+
+        color_to_mask = [255, 0, 170]
+        tolerance = 50
+
+        # Convert the image to a NumPy array
+        image = np.array(image)
+
+        lower_bound = np.array([max(0, c - tolerance) for c in color_to_mask], dtype=np.uint8)
+        upper_bound = np.array([min(255, c + tolerance) for c in color_to_mask], dtype=np.uint8)
+
+        # Create a mask for the color
+        mask = cv2.inRange(image, lower_bound, upper_bound)
+
+        # Create a new black image
+        masked_image = np.zeros_like(image)
+
+        # Set the masked pixels to white
+        masked_image[mask > 0] = [255, 255, 255]  # Set to white
+
+        # Display the masked image
+        # cv2.imshow("Masked Image", masked_image)
+        # cv2.waitKey(0)
+
+        sq = self.get_nearest_tag(clr.PURPLE)
+        self.log_msg(f"sq center: {sq.random_point()}")
+
+        gray = cv2.cvtColor(masked_image, cv2.COLOR_BGR2GRAY)
+
+        # Find contours in the grayscale image
+        contours, _ = cv2.findContours(gray, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        # Filter out small noise by keeping only the largest contour
+        if len(contours) > 0:
+            largest_contour = max(contours, key=cv2.contourArea)
+            # Find the moments of the largest contour
+            moments = cv2.moments(largest_contour)
+            # Calculate the center of the largest contour
+            if moments["m00"] != 0:
+                center_x = int(moments["m10"] / moments["m00"])
+                center_y = int(moments["m01"] / moments["m00"])
+
+                # Get the position of the top-left corner of the square in the original screenshot
+                square_x, square_y = center_x, center_y  # You can adjust this based on your requirements
+
+                # Calculate the center of the square in relation to the original screenshot
+                screenshot_center_x = square_x
+                screenshot_center_y = square_y
+
+                print("Center of the white square in the original screenshot:", (screenshot_center_x, screenshot_center_y))
+            else:
+                print("No area found in the largest contour.")
+        else:
+            print("No contours found in the image.")
+
     # --- Client Settings ---
     @deprecated(reason="This method is no longer needed for RuneLite games that can launch with arguments through the OSBC client.")
     def logout_runelite(self):

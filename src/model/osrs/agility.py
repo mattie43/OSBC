@@ -19,7 +19,7 @@ class OSRSAgility(OSRSBot, launcher.Launchable):
         bot_title = "Rooftops"
         description = "Agility Rooftop Courses"
         super().__init__(bot_title=bot_title, description=description)
-        self.course = "seers"
+        self.course = "rellekka"
         self.api_m = MorgHTTPSocket()
         self.api_s = StatusSocket()
 
@@ -46,52 +46,79 @@ class OSRSAgility(OSRSBot, launcher.Launchable):
         return [
             {
                 "color": clr.PINK,
-                "end_coord": (2729, 3491, 3),
                 "text": "Climb-up",
-                "timeout": 10,
                 "wait": 0.5,
             },
             {
                 "color": clr.CYAN,
-                "end_coord": (2713, 3494, 2),
                 "text": "Jump",
-                "timeout": 10,
                 "wait": 0.1,
-                "failed_coord": (2715, 3494, 0),
             },
             {
                 "color": clr.BLUE,
-                "end_coord": (2710, 3480, 2),
                 "text": "Cross",
-                "timeout": 10,
                 "wait": 2,
-                "failed_coord": (2710, 3484, 0),
             },
             {
                 "color": clr.ORANGE,
-                "end_coord": (2710, 3472, 3),
                 "text": "Jump",
-                "timeout": 10,
                 "wait": 0.5,
             },
             {
                 "color": clr.YELLOW,
-                "end_coord": (2702, 3465, 2),
                 "text": "Jump",
-                "timeout": 10,
                 "wait": 0.1,
             },
             {
                 "color": clr.RED,
-                "end_coord": (2704, 3464, 0),
                 "text": "Jump",
-                "timeout": 20,
                 "wait": 0.1,
+            },
+        ]
+
+    def rellekka_course(self):
+        return [
+            {
+                "color": clr.PINK,
+                "text": "Climb",
+                "wait": 0.1,
+            },
+            {
+                "color": clr.CYAN,
+                "text": "Leap",
+                "wait": 0.2,
+            },
+            {
+                "color": clr.BLUE,
+                "text": "Cross",
+                "wait": 1.5,
+            },
+            {
+                "color": clr.ORANGE,
+                "text": "Leap",
+                "wait": 0.5,
+            },
+            {
+                "color": clr.YELLOW,
+                "text": "Hurdle",
+                "wait": 0.5,
+            },
+            {
+                "color": clr.RED,
+                "text": "Cross",
+                "wait": 0.2,
+            },
+            {
+                "color": clr.PINK,
+                "text": "Jump-in",
+                "wait": 1.5,
             },
         ]
 
     def _get_course(self):
         match self.course:
+            case "rellekka":
+                return self.rellekka_course()
             case "seers":
                 return self.seers_course()
             case _:
@@ -100,6 +127,8 @@ class OSRSAgility(OSRSBot, launcher.Launchable):
     def main_loop(self):
         course = self._get_course()
         self._attempts = 1
+
+        self._set_camera()
 
         while True:
             for index, step in enumerate(course):
@@ -110,16 +139,22 @@ class OSRSAgility(OSRSBot, launcher.Launchable):
                     time.sleep(step["wait"])
                     self._mog_check()
 
-                if index == len(course) - 1:
-                    if not self._run_back():
-                        self._attempts = self._attempts + 1
-
                 if self._attempts > 3:
                     self.log_msg("Failed 3 loops, stopping script.. ")
                     self.stop()
 
+                if index == len(course) - 1:
+                    self._run_back()
+                    self._attempts = self._attempts + 1
+
         self.log_msg("Finished.")
         self.stop()
+
+    def _set_camera(self):
+        # cam = self.api_m.get_camera_position()
+        self.move_camera(vertical=90)
+        self.move_camera(vertical=-10)
+        self.set_compass_north()
 
     def _click_color(self, color):
         obj = self.get_nearest_tag(color)
@@ -131,17 +166,19 @@ class OSRSAgility(OSRSBot, launcher.Launchable):
 
     def _wait_for_xp_or_fail(self):
         xp_dmg = self.api_m.wait_til_gained_xp_or_damage(skill="Agility")
-        # took dmg
+        # -2 == took dmg
         if xp_dmg == -2:
             time.sleep(0.5)
             return False
         return True
 
     def _run_back(self):
-        sqs = self.get_all_tagged_in_rect(self.win.game_view, clr.GREEN)
-        if not sqs:
+        purp_sq = self.get_nearest_tag(clr.PURPLE)
+        green_sq = self.get_nearest_tag(clr.GREEN)
+        if not green_sq and not purp_sq:
             return False
-        sq_point = random.choice(sqs).random_point()
+        sq = green_sq if green_sq else purp_sq
+        sq_point = self._point_variance(sq.center(), 15, 15)
         self.mouse.move_to(sq_point)
         self.mouse.click()
         self._check_idle()
@@ -160,7 +197,7 @@ class OSRSAgility(OSRSBot, launcher.Launchable):
         if item_text and item_text[0]:
             item = item_text[0]
             item.set_rectangle_reference(self.win.game_view)
-            if item.distance_from_center() < 100:
+            if item.distance_from_center() < 80:
                 self.pick_up_loot("Mark of grace")
                 self._inv_check()
 
@@ -180,11 +217,11 @@ class OSRSAgility(OSRSBot, launcher.Launchable):
                 time.sleep(0.6)
                 break
 
-    def _point_variance(self, x: int, y: int, variance: int = 3):
-        if not x and not y:
+    def _point_variance(self, point: Point, x_variance: int = 3, y_variance: int = 3):
+        if not point:
             return None
-        x += random.randint(-variance, variance)
-        y += random.randint(-variance, variance)
+        x = point.x + random.randint(-x_variance, x_variance)
+        y = point.y + random.randint(-y_variance, y_variance)
         return Point(x, y)
 
     # # # # # #
