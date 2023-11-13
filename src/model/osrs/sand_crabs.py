@@ -4,12 +4,12 @@ import utilities.api.item_ids as ids
 import utilities.color as clr
 import utilities.random_util as rd
 import utilities.game_launcher as launcher
+import utilities.helpers as helpers
 import pathlib
 from model.osrs.osrs_bot import OSRSBot
 from utilities.api.morg_http_client import MorgHTTPSocket
 from utilities.api.status_socket import StatusSocket
 from utilities.geometry import RuneLiteObject
-from utilities.helpers import Helpers
 
 
 class OSRSSandCrabs(OSRSBot, launcher.Launchable):
@@ -20,7 +20,6 @@ class OSRSSandCrabs(OSRSBot, launcher.Launchable):
         self.running_time = 1
         self.api_m = MorgHTTPSocket()
         self.api_s = StatusSocket()
-        self.helpers = Helpers()
         self.food_choice = ids.ANGLERFISH
         self.camera_movement = 1
 
@@ -107,7 +106,7 @@ class OSRSSandCrabs(OSRSBot, launcher.Launchable):
                 time.sleep(0.5)
 
         self.log_msg(f"Failed to find step: {step_num}")
-        self.helpers._call_discord(f"Failed to find step: {step_num}")
+        helpers.call_discord(f"Failed to find step: {step_num}")
         self.stop()
 
     def _walk_to(self, sqs):
