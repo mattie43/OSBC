@@ -7,9 +7,10 @@ from dotenv import load_dotenv
 class Helpers:
     def __init__(self):
         load_dotenv()
+        self.DISCORD_WEBHOOK = os.getenv("DISCORD_WEBHOOK")
 
     def _call_discord(self, content):
-        WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK")
+        WEBHOOK_URL = self.DISCORD_WEBHOOK
         headers = {
             "Content-Type": "application/json",
         }
