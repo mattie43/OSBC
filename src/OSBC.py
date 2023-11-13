@@ -347,7 +347,7 @@ if __name__ == "__main__":
         app = App()
         app.start()
     else:
-        from model.osrs.agility import OSRSAgility
+        from model.osrs.sand_crabs import OSRSSandCrabs
 
         app = App(test=True)
-        app.test(OSRSAgility())
+        app.test(OSRSSandCrabs())

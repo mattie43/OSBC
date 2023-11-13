@@ -1,6 +1,5 @@
 import time
 import random
-
 import utilities.api.item_ids as ids
 import utilities.color as clr
 import utilities.random_util as rd
@@ -10,6 +9,7 @@ from model.osrs.osrs_bot import OSRSBot
 from utilities.api.morg_http_client import MorgHTTPSocket
 from utilities.api.status_socket import StatusSocket
 from utilities.geometry import RuneLiteObject
+from utilities.helpers import Helpers
 
 
 class OSRSSandCrabs(OSRSBot, launcher.Launchable):
@@ -20,6 +20,7 @@ class OSRSSandCrabs(OSRSBot, launcher.Launchable):
         self.running_time = 1
         self.api_m = MorgHTTPSocket()
         self.api_s = StatusSocket()
+        self.helpers = Helpers()
         self.food_choice = ids.ANGLERFISH
         self.camera_movement = 1
 
@@ -52,12 +53,10 @@ class OSRSSandCrabs(OSRSBot, launcher.Launchable):
 
     def main_loop(self):
         while True:
-            in_combat = self._combat_check()
-
-            if not in_combat:
-                self._check_hp()
-                self._check_xp()
-                self._reset_aggro()
+            self._combat_check()
+            self._check_hp()
+            # self._check_xp()
+            self._reset_aggro()
 
         self.stop()
 
@@ -78,16 +77,16 @@ class OSRSSandCrabs(OSRSBot, launcher.Launchable):
             self.log_msg("Nearing max xp! Stopping script..")
             self.stop()
 
-    def _combat_check(self, attempt=1):
-        if attempt > 3:
-            return False
-
-        time.sleep(8)
-        in_combat = self.api_m.get_is_in_combat()
-        if not in_combat:
-            return self._combat_check(attempt=attempt + 1)
-
-        return True
+    def _combat_check(self):
+        loops = 1
+        max_time = 40
+        while loops < max_time:
+            in_combat = self.api_m.get_is_in_combat()
+            if in_combat:
+                loops = 1
+            else:
+                loops += 1
+            time.sleep(0.6)
 
     def _reset_aggro(self):
         for x in range(4):
@@ -108,19 +107,17 @@ class OSRSSandCrabs(OSRSBot, launcher.Launchable):
                 time.sleep(0.5)
 
         self.log_msg(f"Failed to find step: {step_num}")
+        self.helpers._call_discord(f"Failed to find step: {step_num}")
         self.stop()
 
     def _walk_to(self, sqs):
         sq_point = random.choice(sqs).random_point()
         self.mouse.move_to(sq_point)
         self.mouse.click()
-        time.sleep(0.6)
-
-        prev_player_idle = None
+        time.sleep(1.2)
 
         while True:
             player_idle = self.api_m.get_is_player_idle()
-            if player_idle and prev_player_idle:
+            if player_idle:
                 break
-            prev_player_idle = player_idle
             time.sleep(0.7)
