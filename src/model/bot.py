@@ -2,6 +2,7 @@
 A Bot is a base class for bot script models. It is abstract and cannot be instantiated. Many of the methods in this base class are
 pre-implemented and can be used by subclasses, or called by the controller. Code in this class should not be modified.
 """
+
 import ctypes
 import platform
 import re
@@ -434,7 +435,7 @@ class Bot(ABC):
             If args are left blank, returns the text in the chatbox.
         """
         if contains is None:
-            return ocr.extract_text(self.win.chat, ocr.PLAIN_12, clr.BLUE)
+            return ocr.extract_text(self.win.chat, ocr.PLAIN_12, clr.BLACK)
         if ocr.find_text(contains, self.win.chat, ocr.PLAIN_12, clr.BLUE):
             return True
 
