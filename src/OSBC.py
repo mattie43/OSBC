@@ -341,13 +341,18 @@ class App(customtkinter.CTk):
 
 if __name__ == "__main__":
     # === Cold-start with OSBC GUI ===
-    cold_start = False
+    start_type = "agility"
 
-    if cold_start:
+    if start_type == "cold":
         app = App()
         app.start()
-    else:
+    elif start_type == "wood":
         from model.osrs.woodcutting import OSRSWoodcutting
 
         app = App(test=True)
         app.test(OSRSWoodcutting())
+    elif start_type == "agility":
+        from model.osrs.agility import OSRSAgility
+
+        app = App(test=True)
+        app.test(OSRSAgility())
