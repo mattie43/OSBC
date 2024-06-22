@@ -288,6 +288,26 @@ class Bot(ABC):
             self.mouse.click()
         pag.keyUp("shift")
 
+    def click_inv_slots(self, slots: List[int]) -> None:
+        """
+        Clicks inventory slot items.
+        Args:
+            slots: The indices of slots.
+        """
+        for i, slot in enumerate(self.win.inventory_slots):
+            if i not in slots:
+                continue
+            p = slot.random_point()
+            self.mouse.move_to(
+                (p[0], p[1]),
+                mouseSpeed="fastest",
+                knotsCount=1,
+                offsetBoundaryY=40,
+                offsetBoundaryX=40,
+                tween=pytweening.easeInOutQuad,
+            )
+            self.mouse.click()
+
     def friends_nearby(self) -> bool:
         """
         Checks the minimap for green dots to indicate friends nearby.

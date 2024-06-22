@@ -10,6 +10,7 @@ For converting RGB to HSV:
 Item ID Database:
     https://www.runelocus.com/tools/osrs-item-id-list/
 """
+
 import time
 from abc import ABCMeta
 from typing import List, Union

@@ -78,7 +78,7 @@ class OSRSWoodcutting(OSRSBot, launcher.Launchable):
             time.sleep(0.6)
 
     def _inv_check(self):
-        inv_full = "Yourinventoryistoofulltoholdanymoreteaklogs"
+        inv_full = "Yourinventoryistoofulltoholdanymore"
         chat_text = self.chatbox_text()[-55:-1]
         if inv_full in chat_text:
             return True
@@ -89,15 +89,17 @@ class OSRSWoodcutting(OSRSBot, launcher.Launchable):
     def main_loop(self):
         # self._set_camera()
 
+        loop_count = 0
+
         while True:
             self._click_color(clr.PINK)
             time.sleep(3)
             while self.is_player_doing_action("Woodcutting"):
                 time.sleep(1.2)
-            if self._inv_check():
+            if loop_count > 26:
                 self.drop_all()
-                # keyboard.write(" ")
-                # keyboard.press_and_release("enter")
+                loop_count = 0
+            loop_count += 1
 
         self.log_msg("Finished.")
         self.stop()
