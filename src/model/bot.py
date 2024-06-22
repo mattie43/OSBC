@@ -308,6 +308,36 @@ class Bot(ABC):
             )
             self.mouse.click()
 
+    def find_in_inv(self, contains: Union[str, List[str]], drop: bool = False, start_point: int = 0) -> None:
+        """
+        Find item text in inv, then clicks or drops
+        Args:
+            contains: Text to look for.
+            drop: Boolean to drop item when found.
+        Returns: Item index if found, or None.
+        """
+        for i, slot in enumerate(self.win.inventory_slots):
+            if i < start_point:
+                continue
+            p = slot.random_point()
+            self.mouse.move_to(
+                (p[0], p[1]),
+                mouseSpeed="fastest",
+                knotsCount=1,
+                offsetBoundaryY=40,
+                offsetBoundaryX=40,
+                tween=pytweening.easeInOutQuad,
+            )
+            text = self.mouseover_text()
+            if contains in text:
+                if drop:
+                    pag.keyDown("shift")
+                    self.mouse.click()
+                    pag.keyUp("shift")
+                self.mouse.click()
+                return i
+        return None
+
     def friends_nearby(self) -> bool:
         """
         Checks the minimap for green dots to indicate friends nearby.

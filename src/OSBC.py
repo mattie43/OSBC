@@ -341,7 +341,7 @@ class App(customtkinter.CTk):
 
 if __name__ == "__main__":
     # === Set start type ===
-    start_type = "herb"
+    start_type = "mm"
 
     match start_type:
         case "cold":
@@ -365,3 +365,9 @@ if __name__ == "__main__":
 
             app = App(test=True)
             app.test(OSRSHerblore())
+
+        case "mm":
+            from model.osrs.maniacal_monkeys import OSRSManiacalMonkeys
+
+            app = App(test=True)
+            app.test(OSRSManiacalMonkeys())
