@@ -341,7 +341,7 @@ class App(customtkinter.CTk):
 
 if __name__ == "__main__":
     # === Set start type ===
-    start_type = "mm"
+    start_type = "tithe"
 
     match start_type:
         case "cold":
@@ -371,3 +371,9 @@ if __name__ == "__main__":
 
             app = App(test=True)
             app.test(OSRSManiacalMonkeys())
+
+        case "tithe":
+            from model.osrs.tithe_farm import OSRSTitheFarm
+
+            app = App(test=True)
+            app.test(OSRSTitheFarm())
